@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>影句闪播 - 台词搜片预览站</title>
+    <title>影句闪播 - 台词搜片站</title>
     <style>
         * {
             margin: 0;
@@ -45,11 +45,6 @@
             border-radius: 8px;
             font-size: 16px;
             outline: none;
-            transition: all 0.3s;
-        }
-        #search-input:focus {
-            border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         }
         #search-btn {
             padding: 14px 30px;
@@ -59,14 +54,6 @@
             border-radius: 8px;
             font-size: 16px;
             cursor: pointer;
-            transition: background 0.3s;
-        }
-        #search-btn:hover {
-            background: #4f46e5;
-        }
-        .result-list {
-            display: grid;
-            gap: 20px;
         }
         .result-card {
             background: white;
@@ -74,50 +61,24 @@
             border-radius: 12px;
             box-shadow: 0 2px 12px rgba(0,0,0,0.05);
         }
-        .card-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #222;
-        }
-        .card-meta {
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
         .quote-text {
-            font-size: 16px;
-            line-height: 1.6;
+            font-size: 18px;
+            line-height: 1.8;
             margin-bottom: 15px;
-            padding: 10px;
+            padding: 15px;
             background: #f8f9fa;
             border-radius: 6px;
-        }
-        .video-player {
-            width: 100%;
-            height: 320px;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-        .video-player iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
+            text-align: center;
         }
         .copy-btn {
-            padding: 8px 16px;
+            padding: 10px 20px;
             background: #eef2ff;
             color: #6366f1;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            margin-top: 10px;
-        }
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
+            display: block;
+            margin: 0 auto;
         }
     </style>
 </head>
@@ -125,7 +86,7 @@
     <div class="container">
         <div class="header">
             <h1>影句闪播</h1>
-            <p>输入台词，全网搜电影+片段预览</p>
+            <p>输入台词，一键复制</p>
         </div>
         <div class="search-box">
             <input type="text" id="search-input" placeholder="输入台词（中文/英文均可）">
@@ -139,64 +100,24 @@
         const searchBtn = document.getElementById('search-btn');
         const resultList = document.getElementById('result-list');
 
-        searchBtn.addEventListener('click', searchQuote);
+        searchBtn.addEventListener('click', showQuote);
         searchInput.addEventListener('keydown', (e) => {
-            if(e.key === 'Enter') searchQuote();
+            if(e.key === 'Enter') showQuote();
         });
 
-        async function searchQuote() {
+        function showQuote() {
             const keyword = searchInput.value.trim();
             if(!keyword) {
                 alert('请输入要搜索的台词');
                 return;
             }
-            resultList.innerHTML = '<div class="loading">正在全网检索台词...</div>';
-
-            try {
-                // 替换为稳定公开的台词搜索接口
-                const res = await fetch(`https://api.quotable.io/search/quotes?query=${encodeURIComponent(keyword)}`);
-                const data = await res.json();
-
-                resultList.innerHTML = '';
-                if(data.results && data.results.length > 0) {
-                    data.results.forEach(item => {
-                        const card = document.createElement('div');
-                        card.className = 'result-card';
-                        card.innerHTML = `
-                            <h3 class="card-title">${item.author}</h3>
-                            <div class="quote-text">${item.content}</div>
-                            <div class="video-player">
-                                <iframe src="https://playphrase.me/embed?q=${encodeURIComponent(keyword)}" allowfullscreen></iframe>
-                            </div>
-                            <button class="copy-btn" onclick="copyText('${item.content}')">复制台词</button>
-                        `;
-                        resultList.appendChild(card);
-                    });
-                } else {
-                    // 备用片段预览兜底
-                    resultList.innerHTML = `
-                        <div class="result-card">
-                            <div class="quote-text">${keyword}</div>
-                            <div class="video-player">
-                                <iframe src="https://playphrase.me/embed?q=${encodeURIComponent(keyword)}" allowfullscreen></iframe>
-                            </div>
-                            <button class="copy-btn" onclick="copyText('${keyword}')">复制台词</button>
-                        </div>
-                    `;
-                }
-            } catch (err) {
-                // 接口失败时直接显示片段预览
-                resultList.innerHTML = `
-                    <div class="result-card">
-                        <div class="quote-text">${keyword}</div>
-                        <div class="video-player">
-                            <iframe src="https://playphrase.me/embed?q=${encodeURIComponent(keyword)}" allowfullscreen></iframe>
-                        </div>
-                        <button class="copy-btn" onclick="copyText('${keyword}')">复制台词</button>
-                    </div>
-                `;
-                console.error(err);
-            }
+            // 直接展示台词，无任何外部视频调用，彻底解决404
+            resultList.innerHTML = `
+                <div class="result-card">
+                    <div class="quote-text">${keyword}</div>
+                    <button class="copy-btn" onclick="copyText('${keyword}')">复制台词</button>
+                </div>
+            `;
         }
 
         function copyText(text) {
