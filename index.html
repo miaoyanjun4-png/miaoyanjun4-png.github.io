@@ -125,7 +125,7 @@
     <div class="container">
         <div class="header">
             <h1>影句闪播</h1>
-            <p>输入台词，全网搜电影+片段预览</p >
+            <p>输入台词，全网搜电影+片段预览</p>
         </div>
         <div class="search-box">
             <input type="text" id="search-input" placeholder="输入台词（中文/英文均可）">
@@ -135,12 +135,10 @@
     </div>
 
     <script>
-        // 核心搜索逻辑（对接全网台词+片段预览接口）
         const searchInput = document.getElementById('search-input');
         const searchBtn = document.getElementById('search-btn');
         const resultList = document.getElementById('result-list');
 
-        // 搜索触发
         searchBtn.addEventListener('click', searchQuote);
         searchInput.addEventListener('keydown', (e) => {
             if(e.key === 'Enter') searchQuote();
@@ -155,37 +153,52 @@
             resultList.innerHTML = '<div class="loading">正在全网检索台词...</div>';
 
             try {
-                // 1. 调用全网台词搜索接口
-                const quoteRes = await fetch(`https://api.doubao.com/quote/search?keyword=${encodeURIComponent(keyword)}`);
-                const quoteData = await quoteRes.json();
+                // 替换为稳定公开的台词搜索接口
+                const res = await fetch(`https://api.quotable.io/search/quotes?query=${encodeURIComponent(keyword)}`);
+                const data = await res.json();
 
-                // 2. 渲染结果+片段预览
                 resultList.innerHTML = '';
-                if(quoteData.data && quoteData.data.length > 0) {
-                    quoteData.data.forEach(item => {
+                if(data.results && data.results.length > 0) {
+                    data.results.forEach(item => {
                         const card = document.createElement('div');
                         card.className = 'result-card';
                         card.innerHTML = `
-                            <h3 class="card-title">${item.title} (${item.year})</h3>
-                            <div class="card-meta">角色：${item.character}</div>
-                            <div class="quote-text">${item.quote}</div>
+                            <h3 class="card-title">${item.author}</h3>
+                            <div class="quote-text">${item.content}</div>
                             <div class="video-player">
-                                <iframe src="https://playphrase.me/embed?q=${encodeURIComponent(keyword)}&m=${item.title}" allowfullscreen></iframe>
+                                <iframe src="https://playphrase.me/embed?q=${encodeURIComponent(keyword)}" allowfullscreen></iframe>
                             </div>
-                            <button class="copy-btn" onclick="copyText('${item.quote}')">复制台词</button>
+                            <button class="copy-btn" onclick="copyText('${item.content}')">复制台词</button>
                         `;
                         resultList.appendChild(card);
                     });
                 } else {
-                    resultList.innerHTML = '<div class="loading">未找到匹配的台词，换个关键词试试</div>';
+                    // 备用片段预览兜底
+                    resultList.innerHTML = `
+                        <div class="result-card">
+                            <div class="quote-text">${keyword}</div>
+                            <div class="video-player">
+                                <iframe src="https://playphrase.me/embed?q=${encodeURIComponent(keyword)}" allowfullscreen></iframe>
+                            </div>
+                            <button class="copy-btn" onclick="copyText('${keyword}')">复制台词</button>
+                        </div>
+                    `;
                 }
             } catch (err) {
-                resultList.innerHTML = '<div class="loading">搜索失败，请稍后重试</div>';
+                // 接口失败时直接显示片段预览
+                resultList.innerHTML = `
+                    <div class="result-card">
+                        <div class="quote-text">${keyword}</div>
+                        <div class="video-player">
+                            <iframe src="https://playphrase.me/embed?q=${encodeURIComponent(keyword)}" allowfullscreen></iframe>
+                        </div>
+                        <button class="copy-btn" onclick="copyText('${keyword}')">复制台词</button>
+                    </div>
+                `;
                 console.error(err);
             }
         }
 
-        // 复制台词功能
         function copyText(text) {
             navigator.clipboard.writeText(text);
             alert('台词复制成功');
